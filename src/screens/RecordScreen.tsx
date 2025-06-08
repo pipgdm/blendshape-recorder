@@ -3,12 +3,15 @@ import { loadFaceLandmarker, getBlendshapesForVideo } from '../services/mediapip
 import AvatarCanvas from '../components/AvatarCanvas';
 import { useRecorder } from '../hooks/useRecorder';
 import { useNavigate } from 'react-router-dom';
+import * as THREE from 'three';
+
 
 const RecordScreen: React.FC = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const frameCountRef = useRef(0);
   const [startTime] = useState(Date.now());
   const [latestBlendshapes, setLatestBlendshapes] = useState<{ categoryName: string; score: number }[]>([]);
+  const [latestRotation, setLatestRotation] = useState<THREE.Euler | null>(null);
   const { isRecording, startRecording, stopRecording, addFrame, downloadFrames } = useRecorder();
   const navigate = useNavigate();
 
@@ -38,31 +41,31 @@ const RecordScreen: React.FC = () => {
         requestAnimationFrame(predict);
         return;
       }
-
-      console.log('🌀 Predict loop running');
-
+  
       const result = getBlendshapesForVideo(videoRef.current);
+  
       if (result?.blendshapes.length) {
-        //console.log('🟢 Blendshapes:', result.blendshapes);
         setLatestBlendshapes(result.blendshapes);
+        addFrame(
+          result.blendshapes,
+          result.rotation ? { x: result.rotation.x, y: result.rotation.y, z: result.rotation.z } : null
+        );
       }
-
-      if (result?.blendshapes.length) {
-        //console.log('🟢 Blendshapes:', result.blendshapes);
-        addFrame(result.blendshapes);
+  
+      if (result?.rotation) {
+        setLatestRotation(result.rotation);
       }
-      
-
+  
       frameCountRef.current++;
       const elapsed = (Date.now() - startTime) / 1000;
       const fps = (frameCountRef.current / elapsed).toFixed(1);
-      //console.log(`⏱ Frames: ${frameCountRef.current} | FPS: ${fps}`);
-
+  
       requestAnimationFrame(predict);
     };
-
+  
     predict();
   }, []);
+  
 
   return (
     <>
@@ -85,7 +88,7 @@ const RecordScreen: React.FC = () => {
   
         {/* Avatar */}
         <div style={{ width: 500, height: 500 }}>
-          <AvatarCanvas blendshapes={latestBlendshapes} />
+          <AvatarCanvas blendshapes={latestBlendshapes} rotation={latestRotation} />
         </div>
       </div>
   

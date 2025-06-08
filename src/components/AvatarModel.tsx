@@ -7,13 +7,13 @@ const AVATAR_URL = 'https://models.readyplayer.me/6460d95f9ae10f45bffb2864.glb?m
 
 type Props = {
   blendshapes: { categoryName: string; score: number }[];
+  rotation: THREE.Euler | null; // 👈 New prop
 };
 
-const AvatarModel: React.FC<Props> = ({ blendshapes }) => {
+const AvatarModel: React.FC<Props> = ({ blendshapes, rotation }) => {
   const { scene, nodes } = useGLTF(AVATAR_URL, true);
   const meshRefs = useRef<THREE.Mesh[]>([]);
 
-  // Collect morphable meshes once
   useEffect(() => {
     meshRefs.current = [];
     Object.values(nodes).forEach((node: any) => {
@@ -23,10 +23,8 @@ const AvatarModel: React.FC<Props> = ({ blendshapes }) => {
     });
   }, [nodes]);
 
-  // Animate morph targets using blendshapes
   useFrame(() => {
-    if (!blendshapes || blendshapes.length === 0) return;
-
+    // 🎯 Blendshapes
     for (const mesh of meshRefs.current) {
       const dict = mesh.morphTargetDictionary;
       const influences = mesh.morphTargetInfluences;
@@ -37,6 +35,13 @@ const AvatarModel: React.FC<Props> = ({ blendshapes }) => {
           influences[index] = score;
         }
       });
+    }
+
+    // 🌀 Rotation
+    if (rotation && nodes.Head && nodes.Neck && nodes.Spine2) {
+      nodes.Head.rotation.set(rotation.x, rotation.y, rotation.z);
+      nodes.Neck.rotation.set(rotation.x / 5 + 0.3, rotation.y / 5, rotation.z / 5);
+      nodes.Spine2.rotation.set(rotation.x / 10, rotation.y / 10, rotation.z / 10);
     }
   });
 
