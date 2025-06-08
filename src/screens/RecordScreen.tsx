@@ -4,6 +4,7 @@ import AvatarCanvas from '../components/AvatarCanvas';
 import { useRecorder } from '../hooks/useRecorder';
 import { useNavigate } from 'react-router-dom';
 import * as THREE from 'three';
+import RiveAvatar from '../components/RiveAvatar';
 
 
 const RecordScreen: React.FC = () => {
@@ -89,6 +90,9 @@ const RecordScreen: React.FC = () => {
         {/* Avatar */}
         <div style={{ width: 500, height: 500 }}>
           <AvatarCanvas blendshapes={latestBlendshapes} rotation={latestRotation} />
+        </div>
+        <div style={{ width: 200, height: 200 }}>
+            <RiveAvatar rotation={latestRotation ? { x: latestRotation.x, y: latestRotation.y, z: latestRotation.z } : null} />
         </div>
       </div>
   
